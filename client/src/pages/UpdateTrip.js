@@ -13,7 +13,7 @@ const UpdateTrip = () => {
 
   const [location, setLocation] = useState('');
   const [note, setNote] = useState('');
-  const [updateTrip, { error }] = useMutation(UPDATE_TRIP);
+const [updateTrip] = useMutation(UPDATE_TRIP);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

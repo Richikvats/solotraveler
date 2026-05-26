@@ -32,7 +32,7 @@ import Auth from './utils/auth';
 import './App.css';
 
 const httpLink = createHttpLink({
-    uri: '/graphql',
+    uri: process.env.REACT_APP_API_URL,
 });
 
 const authLink = setContext((_, { headers }) => {

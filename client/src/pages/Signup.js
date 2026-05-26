@@ -19,6 +19,8 @@ const Signup = () => {
         password: '',
     });
 
+    const [errorMessage, setErrorMessage] = useState('');
+
     const [addUser] = useMutation(ADD_USER);
 
     const handleInputChange = (e) => {
@@ -33,8 +35,10 @@ const Signup = () => {
     const createUser = async (e) => {
         e.preventDefault();
 
+        setErrorMessage('');
+
         try {
-            console.log("Creating user...");
+            console.log('Creating user...');
 
             const { data } = await addUser({
                 variables: {
@@ -44,18 +48,20 @@ const Signup = () => {
                 },
             });
 
-            console.log("Response:", data);
+            console.log('GraphQL Response:', data);
 
-            if (!data?.addUser?.token) {
-                throw new Error("Token not returned");
+            if (!data || !data.addUser || !data.addUser.token) {
+                throw new Error('Signup failed: token missing');
             }
 
+            // save optional data
             localStorage.setItem('firstName', firstName);
             localStorage.setItem('lastName', lastName);
 
+            // login after signup
             Auth.login(data.addUser.token);
 
-            // clear form
+            // clear fields
             setFirstName('');
             setLastName('');
 
@@ -68,12 +74,23 @@ const Signup = () => {
             navigate('/welcome');
 
         } catch (err) {
-            console.error("Signup Error:", err);
+            console.error('Signup Error:', err);
 
-            alert(
-                err.message ||
-                "Signup failed. Check console."
-            );
+            let message = 'Signup failed';
+
+            if (err.graphQLErrors?.length) {
+                message = err.graphQLErrors[0].message;
+            }
+
+            else if (err.networkError) {
+                message = 'Cannot connect to backend server';
+            }
+
+            else if (err.message) {
+                message = err.message;
+            }
+
+            setErrorMessage(message);
         }
     };
 
@@ -86,13 +103,25 @@ const Signup = () => {
                             <Card.Body>
 
                                 <div className='mb-3 mt-md-4'>
+
                                     <h2 className='fw-bold mb-2 text-uppercase text-center'>
                                         Welcome Solo Travelers
                                     </h2>
 
-                                    <p className='text-center mb-5'>
-                                        Please enter your Sign Up info!
+                                    <p className='text-center mb-4'>
+                                        Please enter your Sign Up information
                                     </p>
+
+                                    {errorMessage && (
+                                        <p
+                                            style={{
+                                                color: 'red',
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            {errorMessage}
+                                        </p>
+                                    )}
 
                                     <Form onSubmit={createUser}>
 
@@ -100,8 +129,8 @@ const Signup = () => {
                                             <Form.Label>First Name</Form.Label>
 
                                             <Form.Control
-                                                className='form-bubble'
                                                 type='text'
+                                                className='form-bubble'
                                                 placeholder='First Name'
                                                 value={firstName}
                                                 onChange={(e) =>
@@ -114,8 +143,8 @@ const Signup = () => {
                                             <Form.Label>Last Name</Form.Label>
 
                                             <Form.Control
-                                                className='form-bubble'
                                                 type='text'
+                                                className='form-bubble'
                                                 placeholder='Last Name'
                                                 value={lastName}
                                                 onChange={(e) =>
@@ -128,8 +157,8 @@ const Signup = () => {
                                             <Form.Label>Username</Form.Label>
 
                                             <Form.Control
-                                                className='form-bubble'
                                                 type='text'
+                                                className='form-bubble'
                                                 placeholder='Username'
                                                 name='username'
                                                 value={userFormData.username}
@@ -142,8 +171,8 @@ const Signup = () => {
                                             <Form.Label>Email</Form.Label>
 
                                             <Form.Control
-                                                className='form-bubble'
                                                 type='email'
+                                                className='form-bubble'
                                                 placeholder='Enter Email'
                                                 name='email'
                                                 value={userFormData.email}
@@ -156,8 +185,8 @@ const Signup = () => {
                                             <Form.Label>Password</Form.Label>
 
                                             <Form.Control
-                                                className='form-bubble'
                                                 type='password'
+                                                className='form-bubble'
                                                 placeholder='Password'
                                                 name='password'
                                                 value={userFormData.password}
@@ -167,25 +196,28 @@ const Signup = () => {
                                         </Form.Group>
 
                                         <div className='d-flex justify-content-center'>
+
                                             <motion.button
-                                                className='sign-up-btn'
                                                 type='submit'
+                                                className='sign-up-btn'
                                                 whileHover={{
                                                     scale: 1.05
                                                 }}
                                             >
                                                 Signup
                                             </motion.button>
+
                                         </div>
 
                                     </Form>
 
                                     <div className='mt-3 text-center'>
+
                                         Already registered?
 
                                         <motion.button
-                                            className='sign-in-btn'
                                             type='button'
+                                            className='sign-in-btn'
                                             onClick={() =>
                                                 navigate('/login')
                                             }
@@ -195,6 +227,7 @@ const Signup = () => {
                                         >
                                             Login
                                         </motion.button>
+
                                     </div>
 
                                 </div>
