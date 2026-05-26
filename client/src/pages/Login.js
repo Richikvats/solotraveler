@@ -1,150 +1,135 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { Col, Button, Row, Container, Card, Form } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import env from 'react-dotenv';
-import { useMutation } from '@apollo/client';
-import { LOGIN_USER } from '../utils/mutations';
-import Auth from '../utils/auth';
-import './styles/login.scss';
-import './styles/signup.scss';
-import { motion } from 'framer-motion';
-
-const projectID = env.REACT_APP_CE_PUBLIC_KEY;
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Container, Row, Col, Card, Form } from "react-bootstrap";
+import { useMutation } from "@apollo/client";
+import { LOGIN_USER } from "../utils/mutations";
+import Auth from "../utils/auth";
+import { motion } from "framer-motion";
+import "./styles/login.scss";
 
 const Login = () => {
-	let navigate = useNavigate();
+    const navigate = useNavigate();
 
-	const [userFormData, setUserFormData] = useState({
-		email: '',
-		password: '',
-	});
-	const [error, setError] = useState('');
-	const [login] = useMutation(LOGIN_USER);
+    const [formState, setFormState] = useState({
+        email: "",
+        password: "",
+    });
 
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setUserFormData({ ...userFormData, [name]: value });
-	};
+    const [login] = useMutation(LOGIN_USER);
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
+    const handleChange = (e) => {
+        const { name, value } = e.target;
 
-		const authObject = {
-			'Project-ID': projectID,
-			'User-Name': userFormData.email,
-			'User-Secret': userFormData.password,
-		};
+        setFormState({
+            ...formState,
+            [name]: value,
+        });
+    };
 
-		try {
-			await axios.get('https://api.chatengine.io/chats', {
-				headers: authObject,
-			});
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
 
-			localStorage.setItem('username', userFormData.email);
-			localStorage.setItem('password', userFormData.password);
+        try {
+            const { data } = await login({
+                variables: {
+                    email: formState.email,
+                    password: formState.password,
+                },
+            });
 
-			setError('');
+            console.log("Login successful:", data);
 
-			const { data } = await login({
-				variables: {
-					email: userFormData.email,
-					password: userFormData.password,
-				},
-			});
+            Auth.login(data.login.token);
 
-			Auth.login(data.login.token);
-		} catch (err) {
-			console.error(err);
-		}
+            navigate("/welcome");
 
-		navigate(`/welcome`);
-	};
+        } catch (err) {
+            console.error("Login error:", err);
+            alert("Invalid email or password");
+        }
+    };
 
-	return (
-		<div className='login-background container-fluid'>
-			<Container >
-				<Row className='vh-100 d-flex justify-content-center align-items-center'>
-					<Col md={8} lg={6} xs={12}>
-						<Card className='shadow'>
-							<Card.Body>
-								<div className='mb-3 mt-md-4'>
-									<h2 className='login-title fw-bold mb-2 text-uppercase text-center'>
-										Welcome Back{' '}
-									</h2>
-									<p className='mb-5 text-center'>Adventure and friendship await you!</p>
-									<div className='mb-3'>
-										<Form onSubmit={handleSubmit}>
-											<Form.Group className='mb-3' controlId='formBasicEmail'>
-												<Form.Label className='text-center'>
-													Email address
-												</Form.Label>
-												<Form.Control
-													type='email'
-													placeholder='Enter email'
-													name='email'
-													onChange={handleInputChange}
-													value={userFormData.email}
-													required
-												/>
-											</Form.Group>
+    return (
+        <div className="container-fluid login-background">
+            <Container>
+                <Row className="vh-100 d-flex justify-content-center align-items-center">
+                    <Col md={8} lg={6} xs={12}>
+                        <Card className="shadow">
+                            <Card.Body>
 
-											<Form.Group
-												className='mb-3'
-												controlId='formBasicPassword'
-											>
-												<Form.Label>Password</Form.Label>
-												<Form.Control
-													type='password'
-													placeholder='Password'
-													name='password'
-													onChange={handleInputChange}
-													value={userFormData.password}
-													required
-												/>
-											</Form.Group>
-											<Form.Group
-												className='mb-3'
-												controlId='formBasicCheckbox'
-											></Form.Group>
-											<div className='d-grid d-flex justify-content-center align-items-center'>
-												<motion.button type='submit' className='sign-up-btn'
-													whileHover={{
-														scale: 1.05,
-														transition: { duration: 0.3 }
-													}}>
-													Login
-												</motion.button>
-											</div>
-											<h2 className='error'>{error}</h2>
-										</Form>
-										<div className='mt-3 '>
-											<p className='mb-0  text-center'>
-												Don't have an account?{' '}
-												<motion.button
-													type='button'
-													className='sign-in-btn'
-													onClick={() => {
-														navigate('/signup');
-													}}
-													whileHover={{
-														scale: 1.05,
-														transition: { duration: 0.3 }
-													}}
-												>
-													Sign Up
-												</motion.button>
-											</p>
-										</div>
-									</div>
-								</div>
-							</Card.Body>
-						</Card>
-					</Col>
-				</Row>
-			</Container>
-		</div>
-	);
+                                <h2 className="fw-bold text-center mb-4">
+                                    Login
+                                </h2>
+
+                                <Form onSubmit={handleFormSubmit}>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Email</Form.Label>
+
+                                        <Form.Control
+                                            type="email"
+                                            name="email"
+                                            placeholder="Enter Email"
+                                            value={formState.email}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Password</Form.Label>
+
+                                        <Form.Control
+                                            type="password"
+                                            name="password"
+                                            placeholder="Enter Password"
+                                            value={formState.password}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </Form.Group>
+
+                                    <div className="d-flex justify-content-center">
+
+                                        <motion.button
+                                            className="sign-up-btn"
+                                            type="submit"
+                                            whileHover={{
+                                                scale:1.05
+                                            }}
+                                        >
+                                            Login
+                                        </motion.button>
+
+                                    </div>
+
+                                </Form>
+
+                                <div className="mt-3 text-center">
+                                    Don't have an account?
+
+                                    <motion.button
+                                        className="sign-in-btn"
+                                        type="button"
+                                        onClick={() =>
+                                            navigate("/signup")
+                                        }
+                                        whileHover={{
+                                            scale:1.05
+                                        }}
+                                    >
+                                        Signup
+                                    </motion.button>
+
+                                </div>
+
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
+    );
 };
 
 export default Login;

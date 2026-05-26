@@ -1,14 +1,23 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import {
-	ApolloClient,
-	InMemoryCache,
-	ApolloProvider,
-	createHttpLink,
+    BrowserRouter as Router,
+    Route,
+    Routes,
+    Navigate
+} from 'react-router-dom';
+
+import {
+    ApolloClient,
+    InMemoryCache,
+    ApolloProvider,
+    createHttpLink,
 } from '@apollo/client';
+
 import { setContext } from '@apollo/client/link/context';
+
 import Header from './components/Header';
 import Footer from './components/Footer';
+
 import Login from './pages/Login';
 import Chats from './pages/Chats';
 import AddTrip from './pages/AddTrip';
@@ -16,52 +25,126 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Welcome from './pages/Welcome';
 import Signup from './pages/Signup';
-import Auth from './utils/auth'
-
-import './App.css';
 import UpdateTrip from './pages/UpdateTrip';
 
+import Auth from './utils/auth';
+
+import './App.css';
+
 const httpLink = createHttpLink({
-	uri: '/graphql',
+    uri: '/graphql',
 });
 
 const authLink = setContext((_, { headers }) => {
-	const token = localStorage.getItem('id_token');
+    const token = localStorage.getItem('id_token');
 
-	return {
-		headers: {
-			...headers,
-			authorization: token ? `Bearer ${token}` : '',
-		},
-	};
+    return {
+        headers: {
+            ...headers,
+            authorization: token
+                ? `Bearer ${token}`
+                : '',
+        },
+    };
 });
 
 const client = new ApolloClient({
-	link: authLink.concat(httpLink),
-	cache: new InMemoryCache(),
+    link: authLink.concat(httpLink),
+    cache: new InMemoryCache(),
 });
 
-export default function App() {
-	const loggedIn = Auth.loggedIn();
+function ProtectedRoute({ children }) {
+    return Auth.loggedIn()
+        ? children
+        : <Navigate to="/login" replace />;
+}
 
-	return (
-		<ApolloProvider client={client}>
-			<Router>
-				<Header />
-				<div className='container-flex content'>
-					<Routes>
-						<Route path='/' element={<Home />} />
-						<Route path='/welcome' element={loggedIn ? <Welcome /> : <Navigate to='/login'/>}/>
-						<Route path='/login' element={<Login />} />
-						<Route path='/profile' element={loggedIn ? <Profile /> : <Navigate to='/login'/>} />
-						<Route path='/chats' element={loggedIn ? <Chats /> : <Navigate to='/login'/>} />
-						<Route path='/addtrip' element={loggedIn ? <AddTrip /> : <Navigate to='/login'/>} />
-						<Route path='/updatetrip' element={<UpdateTrip />} />
-						<Route path='/signup' element={<Signup />} />
-					</Routes>
-				</div>
-				<Footer />
-			</Router>
-		</ApolloProvider>
-	);
+export default function App() {
+
+    return (
+        <ApolloProvider client={client}>
+
+            <Router
+                future={{
+                    v7_startTransition: true,
+                    v7_relativeSplatPath: true,
+                }}
+            >
+
+                <Header />
+
+                <div className='container-flex content'>
+
+                    <Routes>
+
+                        <Route
+                            path="/"
+                            element={<Home />}
+                        />
+
+                        <Route
+                            path="/login"
+                            element={<Login />}
+                        />
+
+                        <Route
+                            path="/signup"
+                            element={<Signup />}
+                        />
+
+                        <Route
+                            path="/welcome"
+                            element={
+                                <ProtectedRoute>
+                                    <Welcome />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/profile"
+                            element={
+                                <ProtectedRoute>
+                                    <Profile />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/chats"
+                            element={
+                                <ProtectedRoute>
+                                    <Chats />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/addtrip"
+                            element={
+                                <ProtectedRoute>
+                                    <AddTrip />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/updatetrip"
+                            element={
+                                <ProtectedRoute>
+                                    <UpdateTrip />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                    </Routes>
+
+                </div>
+
+                <Footer />
+
+            </Router>
+
+        </ApolloProvider>
+    );
 }

@@ -81,7 +81,7 @@ const resolvers = {
           throw new AuthenticationError('No user found');
         }
         
-        const trip = await Trip.create({note: note, location: location, userId: user._id});
+        const trip = await Trip.create({ note, location, userId: user._id });
         await User.findByIdAndUpdate({ _id: user._id }, { $addToSet: { trips: trip._id } }, { new: true })
 
         return trip;
@@ -126,7 +126,7 @@ const resolvers = {
 
         return Trip.findOneAndUpdate(
           { userId: user._id, _id: tripId }, 
-          {location: location, note: note },
+          { location, note },
           { new: true }
         )
       }  else {

@@ -29,3 +29,4 @@ query Query($tripId: ID!) {
   }
 }
 `;
+
